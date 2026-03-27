@@ -94,12 +94,13 @@ __declspec(dllexport) LRESULT CALLBACK KeyboardProc(const int code, const WPARAM
     static uint8_t KeyState[VK_PAGES] = {0};
 
     if(wParam == WM_KEYDOWN || wParam == WM_KEYUP) {
-        auto vkCode = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam)->vkCode;
-        auto vkRemainder = vkCode % VK_PAGE_BITS;
-        auto vkPageIndex = (vkCode - vkRemainder) / VK_PAGE_BITS;
-        auto vkPage = KeyState[vkPageIndex];
-        auto bit = 1 << vkRemainder;
-        bool isAlreadyPressed = vkPage & bit;
+        const auto vkCode = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam)->vkCode;
+        const auto vkRemainder = vkCode % VK_PAGE_BITS;
+        const auto vkPageIndex = (vkCode - vkRemainder) / VK_PAGE_BITS;
+        const auto vkPage = KeyState[vkPageIndex];
+        const auto bit = 1 << vkRemainder;
+        const bool isAlreadyPressed = vkPage & bit;
+
         bool report = false;
         if(isAlreadyPressed && wParam == WM_KEYUP) {
             KeyState[vkPageIndex] = vkPage & ~bit;
