@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string>
 #include <thread>
 
 #ifndef UNICODE
@@ -9,23 +8,12 @@
 #include <cassert>
 #include <windows.h>
 #include <hidusage.h>
-
-// int main() {
-//     constexpr unsigned short interval = 3000;
-//     constexpr unsigned short polls = 4;
-//
-//     uint8_t secondsPassed = 0;
-//     for(unsigned short i = 0; i < polls; i++) {
-//         std::this_thread::sleep_for(std::chrono::milliseconds(interval));
-//         std::string_view text = std::to_string(++secondsPassed).append("s passed");
-//         MessageBox(0, text.data(), "HELLO", MB_OK);
-//     }
-//
-//     return 0;
-// }
+#include <atlstr.h>
 
 HHOOK g_KbHook{};
 bool g_IsHookActive{false};
+
+typedef bool (__cdecl *SetupUdpSocketFn)(uint16_t port);
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch(uMsg) {
@@ -36,9 +24,6 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             PostQuitMessage(0);
             return 0;
-        case WM_INPUT:
-            std::cout << "key" << std::endl;
-            break;
         case WM_PAINT:
             return 0;
     }
@@ -50,13 +35,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     constexpr wchar_t WINDOW_CLASS_NAME[] = L"Stoat Keyboard Helper";
     WNDCLASS windowClass{};
 
+    CStringA cmdLine(pCmdLine);
+    std::cout << cmdLine << std::endl;
+
     windowClass.lpfnWndProc = WindowProc;
     windowClass.hInstance = hInstance;
     windowClass.lpszClassName = WINDOW_CLASS_NAME;
 
     RegisterClass(&windowClass);
 
-    HWND hWnd = CreateWindowEx(0, WINDOW_CLASS_NAME, L"Stoat Keyboard Helper", WS_OVERLAPPED, 0, 0, 100, 100, HWND_MESSAGE, 0, windowClass.hInstance, 0);
+    HWND hWnd = CreateWindowEx(0, WINDOW_CLASS_NAME, L"Stoat Keyboard Helper", 0, 0, 0, 100, 100, HWND_MESSAGE, 0, windowClass.hInstance, 0);
 
     assert(hWnd);
 
@@ -69,7 +57,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     assert(RegisterRawInputDevices(&keyboard, 1, sizeof(keyboard)));
 
     static HINSTANCE hookDll = LoadLibrary(L"./kbhook_hook.dll");
-    HOOKPROC keyboardProc = (HOOKPROC)GetProcAddress(hookDll, "KeyboardProc");
+    auto keyboardProc = (HOOKPROC)GetProcAddress(hookDll, "KeyboardProc");
+    assert(keyboardProc);
+
+    auto setupUdpSocket = (SetupUdpSocketFn)GetProcAddress(hookDll, "setupUdpSocket");
+    assert(setupUdpSocket);
+
+    assert(setupUdpSocket(42067));
 
     g_KbHook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardProc, hookDll, 0);
     if(!g_KbHook) {
@@ -92,7 +86,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         TranslateMessage(&currentMessage);
         DispatchMessage(&currentMessage);
     }
-
 
     return 0;
 }
