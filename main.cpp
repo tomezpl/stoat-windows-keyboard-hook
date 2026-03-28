@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <hidusage.h>
 #include <atlstr.h>
+#include <string>
 
 HHOOK g_KbHook{};
 bool g_IsHookActive{false};
@@ -35,8 +36,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     constexpr wchar_t WINDOW_CLASS_NAME[] = L"Stoat Keyboard Helper";
     WNDCLASS windowClass{};
 
+    // FIXME: surely there's a cleaner and faster way of doing this
     CStringA cmdLine(pCmdLine);
-    std::cout << cmdLine << std::endl;
+    std::string cmdLineStr{cmdLine};
+    uint16_t port = strtoul(cmdLineStr.c_str(), nullptr, 0);
+    std::cout << "KBHook listening on " << std::to_string(port) << std::endl;
 
     windowClass.lpfnWndProc = WindowProc;
     windowClass.hInstance = hInstance;
@@ -63,7 +67,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     auto setupUdpSocket = (SetupUdpSocketFn)GetProcAddress(hookDll, "setupUdpSocket");
     assert(setupUdpSocket);
 
-    assert(setupUdpSocket(42067));
+    assert(setupUdpSocket(port));
 
     g_KbHook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardProc, hookDll, 0);
     if(!g_KbHook) {
