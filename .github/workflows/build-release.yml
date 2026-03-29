@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v6
         name: 'Checkout repo'
       - uses: lukka/get-cmake@latest
         name: 'Setup CMake'
@@ -20,7 +20,7 @@ jobs:
           mkdir stoat-kbhook-${{github.ref_name}}
           cp build/Debug/kbhook_app.exe stoat-kbhook-${{github.ref_name}}/kbhook_app.exe
           cp build/Debug/kbhook_hook.dll stoat-kbhook-${{github.ref_name}}/kbhook_hook.dll
-      - uses: ncipollo/release-action@latest
+      - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           artifacts: "stoat-kbhook-${{github.ref_name}}/*"
