@@ -58,7 +58,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     keyboard.dwFlags = RIDEV_NOLEGACY;
     keyboard.hwndTarget = 0;
 
-    assert(RegisterRawInputDevices(&keyboard, 1, sizeof(keyboard)));
+    const auto registerRawInputResult = RegisterRawInputDevices(&keyboard, 1, sizeof(keyboard));
+    assert(registerRawInputResult);
 
     static HINSTANCE hookDll = LoadLibrary(L"./kbhook_hook.dll");
     auto keyboardProc = (HOOKPROC)GetProcAddress(hookDll, "KeyboardProc");
@@ -67,14 +68,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     auto setupUdpSocket = (SetupUdpSocketFn)GetProcAddress(hookDll, "setupUdpSocket");
     assert(setupUdpSocket);
 
-    assert(setupUdpSocket(port));
+    const auto setupUdpServerResult = setupUdpSocket(port);
+    assert(setupUdpServerResult);
 
     g_KbHook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardProc, hookDll, 0);
     if(!g_KbHook) {
         DWORD err = GetLastError();
         std::cout << std::hex << err << std::dec << std::endl;
         IErrorInfo* errInfo = nullptr;
-        assert(!GetErrorInfo(err, &errInfo));
+        const auto errorInfoResult = GetErrorInfo(err, &errInfo);
+        assert(!errorInfoResult);
         BSTR errStr = nullptr;
         errInfo->GetDescription(&errStr);
         assert(errStr);
