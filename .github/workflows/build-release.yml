@@ -20,7 +20,7 @@ jobs:
           mkdir stoat-kbhook-${{github.ref_name}}
           cp build/Debug/kbhook_app.exe stoat-kbhook-${{github.ref_name}}/kbhook_app.exe
           cp build/Debug/kbhook_hook.dll stoat-kbhook-${{github.ref_name}}/kbhook_hook.dll
-      - uses: ncipollo/release-action
+      - uses: ncipollo/release-action@latest
         with:
           allowUpdates: true
           artifacts: "stoat-kbhook-${{github.ref_name}}/*"
