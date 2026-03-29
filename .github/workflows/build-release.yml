@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@latest
         name: 'Checkout repo'
       - uses: lukka/get-cmake@latest
-        name: 'Setup CMake''
+        name: 'Setup CMake'
       - name: Build binaries
         run: |
           cmake -B build
